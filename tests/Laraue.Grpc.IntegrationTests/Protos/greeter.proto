@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "Laraue.Grpc.IntegrationTests.DemoApp";
+
+package laraue.grpc.tests;
+
+// A minimal demo contract used only to exercise Laraue.Grpc.Server/Client end to end.
+service Greeter {
+  rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc Fail (HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}

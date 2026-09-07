@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.66.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Laraue.Grpc.Common\Laraue.Grpc.Common.csproj" />
+    </ItemGroup>
+
+</Project>

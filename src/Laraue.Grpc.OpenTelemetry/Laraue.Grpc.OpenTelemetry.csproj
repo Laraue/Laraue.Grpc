@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Laraue.Grpc.Common\Laraue.Grpc.Common.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Laraue.Grpc.Client/Laraue.Grpc.Client.csproj" />
+    <Project Path="src/Laraue.Grpc.Common/Laraue.Grpc.Common.csproj" />
+    <Project Path="src/Laraue.Grpc.OpenTelemetry/Laraue.Grpc.OpenTelemetry.csproj" />
+    <Project Path="src/Laraue.Grpc.Server/Laraue.Grpc.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Laraue.Grpc.Common.UnitTests/Laraue.Grpc.Common.UnitTests.csproj" />
+    <Project Path="tests/Laraue.Grpc.IntegrationTests/Laraue.Grpc.IntegrationTests.csproj" />
+    <Project Path="tests/Laraue.Grpc.OpenTelemetry.UnitTests/Laraue.Grpc.OpenTelemetry.UnitTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>Latest</LangVersion>
+    <Copyright>Ilya Belyanskiy 2026</Copyright>
+    <Authors>Belyanskiy Ilya</Authors>
+    <PackageProjectUrl>https://github.com/win7user10/Laraue.Grpc</PackageProjectUrl>
+    <!-- Designate all projects as non-package projects by default -->
+    <IsPackable>false</IsPackable>
+    <Version>0.1.0</Version>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>
