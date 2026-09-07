@@ -14,6 +14,10 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write # enable GitHub OIDC token issuance, needed for NuGet trusted publishing
+      contents: read
+
     steps:
     - uses: actions/checkout@v4
 
@@ -34,6 +38,15 @@ jobs:
     - name: Generate a NuGet package
       run: dotnet pack --no-build -c Release -o .
 
-    - name: Push to GitHub package registry
+    - name: NuGet login (OIDC -> temp API key)
       if: github.ref == 'refs/heads/main'
-      run: dotnet nuget push "*.nupkg" -k ${{secrets.NUGETORGTOKEN}} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      uses: NuGet/login@v1
+      id: nuget-login
+      with:
+        # nuget.org username (profile name), NOT an email address - kept as a secret since it's
+        # part of what nuget.org checks against the trusted publishing policy below.
+        user: ${{ secrets.NUGET_USER }}
+
+    - name: Push to NuGet.org
+      if: github.ref == 'refs/heads/main'
+      run: dotnet nuget push "*.nupkg" --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
