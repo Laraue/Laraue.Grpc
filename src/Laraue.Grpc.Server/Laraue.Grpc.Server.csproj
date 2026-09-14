@@ -5,7 +5,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Grpc.AspNetCore.Server" Version="2.66.0" />
+        <PackageReference Include="Grpc.AspNetCore.Server" Version="$(GrpcAspNetCoreServerVersion)" />
+        <PackageReference Include="Laraue.Core.Exceptions" Version="$(LaraueCoreExceptionsVersion)" />
     </ItemGroup>
 
     <ItemGroup>

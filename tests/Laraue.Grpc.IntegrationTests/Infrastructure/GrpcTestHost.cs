@@ -33,7 +33,10 @@ public sealed class GrpcTestHost : IAsyncDisposable
             .ConfigureWebHost(webHost =>
             {
                 webHost.UseTestServer();
-                webHost.ConfigureServices(services => services.AddGrpc().AddLaraueGrpcTelemetry());
+                webHost.ConfigureServices(services => services
+                    .AddGrpc()
+                    .AddLaraueGrpcTelemetry()
+                    .AddLaraueGrpcExceptionHandling());
                 webHost.Configure(app =>
                 {
                     app.UseRouting();

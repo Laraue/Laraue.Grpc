@@ -6,13 +6,34 @@
     <PackageProjectUrl>https://github.com/Laraue/Laraue.Grpc</PackageProjectUrl>
     <!-- Designate all projects as non-package projects by default -->
     <IsPackable>false</IsPackable>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Dependency versions below are floating ranges (up to the next major/minor), not exact
+         pins - a lock file is what keeps CI restoring the exact same resolved versions build to
+         build instead of silently picking up whatever's newest within range on any given run.
+         Regenerate after a range or dependency change with: dotnet restore /p:RestoreForce=true -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GrpcAspNetCoreServerVersion>[2.66.0,3.0.0)</GrpcAspNetCoreServerVersion>
+    <GrpcNetClientFactoryVersion>[2.66.0,3.0.0)</GrpcNetClientFactoryVersion>
+    <GrpcCoreApiVersion>[2.66.0,3.0.0)</GrpcCoreApiVersion>
+    <GrpcToolsVersion>[2.66.0,3.0.0)</GrpcToolsVersion>
+    <GoogleProtobufVersion>[3.28.3,4.0.0)</GoogleProtobufVersion>
+    <LaraueCoreExceptionsVersion>[10.4.0,11.0.0)</LaraueCoreExceptionsVersion>
+    <OpenTelemetryExtensionsHostingVersion>[1.18.0,2.0.0)</OpenTelemetryExtensionsHostingVersion>
+    <OpenTelemetryExporterInMemoryVersion>[1.18.0,2.0.0)</OpenTelemetryExporterInMemoryVersion>
+    <MicrosoftAspNetCoreTestHostVersion>[10.0.2,11.0.0)</MicrosoftAspNetCoreTestHostVersion>
+    <MicrosoftNetTestSdkVersion>[17.14.1,18.0.0)</MicrosoftNetTestSdkVersion>
+    <XunitVersion>[2.9.3,3.0.0)</XunitVersion>
+    <XunitRunnerVisualstudioVersion>[3.1.4,4.0.0)</XunitRunnerVisualstudioVersion>
+    <CoverletCollectorVersion>[6.0.4,7.0.0)</CoverletCollectorVersion>
   </PropertyGroup>
 </Project>

@@ -10,9 +10,12 @@ namespace Laraue.Grpc.IntegrationTests;
 /// <see cref="GreeterService"/> over an in-memory <see cref="Microsoft.AspNetCore.TestHost.TestServer"/>,
 /// through both <c>Laraue.Grpc.Server</c> and <c>Laraue.Grpc.Client</c> interceptors, to prove traces and
 /// metrics actually show up rather than just unit-testing the interceptor logic in isolation.
-/// All facts run sequentially (xunit doesn't parallelize methods within a class), which matters here
-/// since <c>ActivitySpy</c>/<c>MetricSpy</c> subscribe to the shared process-wide "Laraue.Grpc" source/meter.
+/// All facts run sequentially - not just within this class (xunit's default) but also relative to
+/// any other class sharing the "GrpcIntegrationTests" collection - since <c>ActivitySpy</c>/
+/// <c>MetricSpy</c> subscribe to the shared process-wide "Laraue.Grpc" source/meter and would
+/// otherwise pick up calls made by a concurrently-running test class too.
 /// </summary>
+[Collection("GrpcIntegrationTests")]
 public class GrpcTelemetryTests : IAsyncLifetime
 {
     private GrpcTestHost _host = null!;
