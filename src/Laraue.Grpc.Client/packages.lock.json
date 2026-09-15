@@ -12,6 +12,12 @@
           "Microsoft.Extensions.Http": "6.0.0"
         }
       },
+      "Laraue.Core.Exceptions": {
+        "type": "Direct",
+        "requested": "[10.4.0, 11.0.0)",
+        "resolved": "10.4.0",
+        "contentHash": "k9Qh90PUrH2L/6i/e8Evos4X+5N34J0HaHWPG2nyh5WfGWjTeRtyd5ofjbtJX6hydxGcKqkqu0HrJkSNoxoM9w=="
+      },
       "Microsoft.SourceLink.GitHub": {
         "type": "Direct",
         "requested": "[8.0.0, )",

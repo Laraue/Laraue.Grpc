@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Grpc.Core;
+using Laraue.Core.Exceptions.Web;
 using Laraue.Grpc.IntegrationTests.DemoApp;
 using Laraue.Grpc.IntegrationTests.Infrastructure;
 
@@ -75,10 +76,14 @@ public class GrpcTelemetryTests : IAsyncLifetime
 
         var client = _host.CreateGreeterClient();
 
-        var thrown = await Assert.ThrowsAsync<RpcException>(
+        // The client's own ExceptionTranslationInterceptor reverses StatusCode.NotFound back into
+        // a NotFoundException (see ExceptionTranslationInterceptorTests) - registered *after*
+        // ClientTelemetryInterceptor in the chain precisely so telemetry below still observes the
+        // original RpcException/status code first, proven by the assertions that follow.
+        var thrown = await Assert.ThrowsAsync<NotFoundException>(
             () => client.FailAsync(new HelloRequest { Name = "World" }).ResponseAsync);
 
-        Assert.Equal(StatusCode.NotFound, thrown.StatusCode);
+        Assert.Equal("World not found", thrown.Message);
 
         var clientActivity = Assert.Single(activitySpy.Activities, a => a.Kind == ActivityKind.Client);
         var serverActivity = Assert.Single(activitySpy.Activities, a => a.Kind == ActivityKind.Server);

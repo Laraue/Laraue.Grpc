@@ -121,6 +121,13 @@ Every call made through `ordersClient` is now traced and measured on both sides.
 already has an ambient `Activity` (e.g. from an incoming HTTP request it's handling), the trace
 continues through into `OrdersService` on the other side - no extra code needed for that.
 
+If the server side used `AddLaraueGrpcExceptionHandling` (step 5 below) to translate an
+`HttpException` into an `RpcException`, `AddLaraueGrpcClient` reverses that automatically too - a
+failed call surfaces here as the original `NotFoundException`/`BadRequestException`/etc., not a raw
+`RpcException`, for the same status-code subset listed below. Any other status code (including one
+a handler throws directly via `RpcException`, bypassing `HttpException` entirely) is left alone -
+catch `RpcException` yourself for those.
+
 ### 5. Handle exceptions without repeating yourself
 
 If your gRPC handler's business logic throws `Laraue.Core.Exceptions.Web.HttpException` (or one of
@@ -152,6 +159,13 @@ The mapping, keyed off `HttpException.StatusCode`:
 
 An exception that isn't an `HttpException` (or an `RpcException` your code threw directly) is left
 alone - it propagates as-is, same as without this interceptor.
+
+`AddLaraueGrpcClient` (from `Laraue.Grpc.Client`) attaches the reverse of this mapping
+automatically - no opt-in needed there, unlike the server side. A caller doesn't need to know
+whether it's talking to a `Laraue.Grpc.Server` host at all; it just sees the same exception type a
+local call to that logic would have thrown, for `InvalidArgument`/`Unauthenticated`/
+`PermissionDenied`/`NotFound`. It's registered so `ClientTelemetryInterceptor` still observes the
+original `RpcException`/status code before this rewrites it - don't reorder the two by hand.
 
 ### 6. Export what's being recorded
 
@@ -204,9 +218,16 @@ builder.Services.AddOpenTelemetry()
   above) - register with `.AddLaraueGrpcExceptionHandling()`, independent of telemetry.
 - **`Laraue.Grpc.Client`** — `ClientTelemetryInterceptor` does the same on the client side and
   injects W3C `traceparent`/`tracestate` into outgoing gRPC metadata so the server continues the
-  same trace. Register with
+  same trace. Also has `ExceptionTranslationInterceptor`, the reverse of the server's - it catches
+  an `RpcException` and rethrows the matching `HttpException` subtype for the same status-code
+  subset (see [Handle exceptions without repeating yourself](#5-handle-exceptions-without-repeating-yourself)
+  above). Both are registered - always, not opt-in - by
   `services.AddLaraueGrpcClient<TClient>(o => o.Address = new Uri(...))`, a thin wrapper over
-  `Grpc.Net.ClientFactory`'s `AddGrpcClient<T>`.
+  `Grpc.Net.ClientFactory`'s `AddGrpcClient<T>`. Registration order there
+  (`ExceptionTranslationInterceptor` then `ClientTelemetryInterceptor`) is deliberate: interceptors
+  registered later sit closer to the actual call, so telemetry sees the real `RpcException`/status
+  code first, and exception translation - being outermost - is what the caller's `catch` actually
+  sees.
 
 Service contracts (`.proto` files) are **not** part of this library — each app keeps its
 own `Protos/*.proto` and generated stubs, and references `Laraue.Grpc.Server` /
@@ -252,11 +273,15 @@ AspNetCore instrumentation, only `Laraue.Grpc`'s own source/meter.
   a real `Greeter.GreeterClient` built through `AddLaraueGrpcClient`. `GrpcTelemetryTests` asserts
   the telemetry interceptors actually run against each other: matching trace IDs across the wire,
   duration metrics on both sides, and error propagation on a thrown `RpcException`.
-  `ExceptionTranslationInterceptorTests` asserts `ExceptionTranslationInterceptor` translates every
-  `HttpException` subtype to its matching `RpcException.StatusCode`, end to end through a real
-  call. Both test classes share the `"GrpcIntegrationTests"` xunit collection so they never run
-  concurrently - `ActivitySpy`/`MetricSpy` listen process-wide, and calls from a concurrently
-  running class would otherwise pollute either test's captured activities/metrics.
+  `ExceptionTranslationInterceptorTests` asserts the server's `ExceptionTranslationInterceptor`
+  translates every `HttpException` subtype to its matching `RpcException.StatusCode` (using
+  `GrpcTestHost.CreateRawGreeterClient()`, a client with no `Laraue.Grpc.Client` interceptors, so
+  the raw wire status is what's observed), and separately that the client's own
+  `ExceptionTranslationInterceptor` reverses a subset of those status codes back into the original
+  `HttpException` subtype - end to end through real calls both ways. Both test classes share the
+  `"GrpcIntegrationTests"` xunit collection so they never run concurrently - `ActivitySpy`/
+  `MetricSpy` listen process-wide, and calls from a concurrently running class would otherwise
+  pollute either test's captured activities/metrics.
 - **`Laraue.Grpc.OpenTelemetry.UnitTests`** — wires `AddLaraueGrpcTelemetry` into a real
   `TracerProvider`/`MeterProvider` with the OpenTelemetry `InMemory` exporter, and asserts it
   captures activities/metrics from the `"Laraue.Grpc"` source but not unrelated ones.

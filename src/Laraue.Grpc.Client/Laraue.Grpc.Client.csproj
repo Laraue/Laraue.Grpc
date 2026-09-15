@@ -6,6 +6,7 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.Net.ClientFactory" Version="$(GrpcNetClientFactoryVersion)" />
+        <PackageReference Include="Laraue.Core.Exceptions" Version="$(LaraueCoreExceptionsVersion)" />
     </ItemGroup>
 
     <ItemGroup>
