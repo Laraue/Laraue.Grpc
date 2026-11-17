@@ -8,6 +8,10 @@ namespace Laraue.Grpc.Server;
 /// <summary>
 /// Wraps every incoming call in a server <see cref="Activity"/> and records
 /// <see cref="LaraueGrpcTelemetry"/> duration/failure metrics for it.
+/// A call the client cancelled (or whose deadline passed) ends with <see cref="StatusCode.Cancelled"/>:
+/// the <see cref="OperationCanceledException"/> the handler throws from <see cref="ServerCallContext.CancellationToken"/>
+/// is turned into an <see cref="RpcException"/>, which ASP.NET Core gRPC logs at Information instead of
+/// "Error when executing service method".
 /// Register via <see cref="ServerBuilderExtensions.AddLaraueGrpcTelemetry"/>.
 /// </summary>
 public sealed class ServerTelemetryInterceptor : Interceptor
@@ -23,6 +27,10 @@ public sealed class ServerTelemetryInterceptor : Interceptor
             var response = await continuation(request, context);
             scope.Complete(context.Status);
             return response;
+        }
+        catch (OperationCanceledException ex) when (context.CancellationToken.IsCancellationRequested)
+        {
+            throw Cancelled(scope, ex);
         }
         catch (Exception ex)
         {
@@ -43,6 +51,10 @@ public sealed class ServerTelemetryInterceptor : Interceptor
             await continuation(request, responseStream, context);
             scope.Complete(context.Status);
         }
+        catch (OperationCanceledException ex) when (context.CancellationToken.IsCancellationRequested)
+        {
+            throw Cancelled(scope, ex);
+        }
         catch (Exception ex)
         {
             scope.Complete(ex);
@@ -61,6 +73,10 @@ public sealed class ServerTelemetryInterceptor : Interceptor
             var response = await continuation(requestStream, context);
             scope.Complete(context.Status);
             return response;
+        }
+        catch (OperationCanceledException ex) when (context.CancellationToken.IsCancellationRequested)
+        {
+            throw Cancelled(scope, ex);
         }
         catch (Exception ex)
         {
@@ -81,11 +97,25 @@ public sealed class ServerTelemetryInterceptor : Interceptor
             await continuation(requestStream, responseStream, context);
             scope.Complete(context.Status);
         }
+        catch (OperationCanceledException ex) when (context.CancellationToken.IsCancellationRequested)
+        {
+            throw Cancelled(scope, ex);
+        }
         catch (Exception ex)
         {
             scope.Complete(ex);
             throw;
         }
+    }
+
+    /// <summary>Only called when <see cref="ServerCallContext.CancellationToken"/> is cancelled, i.e. the client went
+    /// away or the deadline passed - an <see cref="OperationCanceledException"/> from any other token is the
+    /// service's own failure and is left as it is.</summary>
+    private static RpcException Cancelled(CallScope scope, OperationCanceledException exception)
+    {
+        var rpcException = new RpcException(new Status(StatusCode.Cancelled, "The call was cancelled.", exception));
+        scope.Complete(rpcException);
+        return rpcException;
     }
 
     /// <summary>Extracts the caller's trace context from the incoming metadata so the server span

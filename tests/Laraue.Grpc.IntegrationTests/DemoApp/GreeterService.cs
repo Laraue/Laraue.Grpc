@@ -34,4 +34,12 @@ public sealed class GreeterService : Greeter.GreeterBase
             _ => throw new ArgumentOutOfRangeException(nameof(request), request.Name, "Unknown exception name."),
         };
     }
+
+    /// <summary>Never answers: waits on the call's token the way a database query does, so the call ends only when
+    /// the client cancels it.</summary>
+    public override async Task<HelloReply> WaitForCancellation(HelloRequest request, ServerCallContext context)
+    {
+        await Task.Delay(Timeout.Infinite, context.CancellationToken);
+        throw new InvalidOperationException("Unreachable.");
+    }
 }
