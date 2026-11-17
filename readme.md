@@ -212,7 +212,9 @@ builder.Services.AddOpenTelemetry()
   interceptors use to open/tag an `Activity` and record duration/failure metrics for a call.
 - **`Laraue.Grpc.Server`** — `ServerTelemetryInterceptor` wraps every incoming call (unary,
   client/server-streaming, duplex) in a server `Activity`. Register with
-  `services.AddGrpc().AddLaraueGrpcTelemetry()`. Also has `ExceptionTranslationInterceptor`, which
+  `services.AddGrpc().AddLaraueGrpcTelemetry()`. A call the client cancelled ends with
+  `StatusCode.Cancelled`: the `OperationCanceledException` thrown from `context.CancellationToken`
+  becomes an `RpcException`, so ASP.NET Core gRPC logs it at Information, not as an Error. Also has `ExceptionTranslationInterceptor`, which
   catches `Laraue.Core.Exceptions.Web.HttpException` and translates it into the matching
   `RpcException` (see [Handle exceptions without repeating yourself](#5-handle-exceptions-without-repeating-yourself)
   above) - register with `.AddLaraueGrpcExceptionHandling()`, independent of telemetry.

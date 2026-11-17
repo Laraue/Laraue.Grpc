@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Laraue.Grpc.IntegrationTests.Infrastructure;
 
@@ -24,8 +25,12 @@ public sealed class GrpcTestHost : IAsyncDisposable
     private readonly ServiceProvider _clientServices;
     private readonly GrpcChannel _rawChannel;
 
-    private GrpcTestHost(IHost host, ServiceProvider clientServices, GrpcChannel rawChannel)
+    /// <summary>Everything the server host logged, for tests that check what a call was logged as.</summary>
+    public LogSpy Logs { get; }
+
+    private GrpcTestHost(IHost host, ServiceProvider clientServices, GrpcChannel rawChannel, LogSpy logs)
     {
+        Logs = logs;
         _host = host;
         _clientServices = clientServices;
         _rawChannel = rawChannel;
@@ -33,7 +38,9 @@ public sealed class GrpcTestHost : IAsyncDisposable
 
     public static async Task<GrpcTestHost> StartAsync()
     {
+        var logs = new LogSpy();
         var hostBuilder = new HostBuilder()
+            .ConfigureLogging(logging => logging.AddProvider(logs))
             .ConfigureWebHost(webHost =>
             {
                 webHost.UseTestServer();
@@ -64,7 +71,7 @@ public sealed class GrpcTestHost : IAsyncDisposable
             HttpHandler = testServer.CreateHandler(),
         });
 
-        return new GrpcTestHost(host, clientServices.BuildServiceProvider(), rawChannel);
+        return new GrpcTestHost(host, clientServices.BuildServiceProvider(), rawChannel, logs);
     }
 
     public Greeter.GreeterClient CreateGreeterClient() => _clientServices.GetRequiredService<Greeter.GreeterClient>();
